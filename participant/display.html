@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My QR Code - Event Check-In</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      padding: 40px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #999;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      color: #333;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .qr-display {
+      display: none;
+      text-align: center;
+    }
+
+    .qr-display.show {
+      display: block;
+    }
+
+    .qr-image {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 30px 0;
+      border: 2px solid #667eea;
+    }
+
+    .qr-image img {
+      max-width: 250px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .participant-info {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .info-value {
+      color: #666;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .status-badge.checked-in {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-badge.not-checked-in {
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .checkin-time {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .instructions {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: 20px;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #7f1d1d;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .error.show {
+      display: block;
+    }
+
+    .form-section {
+      display: block;
+    }
+
+    .form-section.hide {
+      display: none;
+    }
+
+    .back-btn {
+      background: #999;
+      margin-top: 20px;
+    }
+
+    .back-btn:hover {
+      background: #777;
+    }
+
+    .print-btn {
+      background: #10b981;
+    }
+
+    .print-btn:hover {
+      background: #059669;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+      .form-section,
+      .back-btn,
+      .print-btn {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>🎫 My QR Code</h1>
+      <p class="subtitle">Show this QR at event entry</p>
+
+      <div class="error" id="error"></div>
+
+      <!-- Form Section -->
+      <div class="form-section" id="formSection">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="your@email.com"
+            onkeypress="handleEnter(event)"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="eventId">Event ID</label>
+          <input 
+            type="text" 
+            id="eventId" 
+            placeholder="Event ID from email"
+            onkeypress="handleEnter(event)"
+          >
+        </div>
+
+        <button onclick="fetchQR()">Get My QR Code</button>
+      </div>
+
+      <!-- QR Display Section -->
+      <div class="qr-display" id="qrDisplay">
+        <div class="participant-info">
+          <div class="info-row">
+            <span class="info-label">Name:</span>
+            <span class="info-value" id="displayName"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email:</span>
+            <span class="info-value" id="displayEmail"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Student ID:</span>
+            <span class="info-value" id="displayStudentId"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Status:</span>
+            <div>
+              <span class="status-badge" id="statusBadge"></span>
+              <div class="checkin-time" id="checkinTime"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qr-image">
+          <p style="color: #666; margin-bottom: 15px; font-size: 12px;">📱 Show this QR code at entry:</p>
+          <img id="qrImage" src="" alt="Your QR Code">
+        </div>
+
+        <div class="instructions">
+          ✅ <strong>How to use:</strong><br>
+          1️⃣ Keep this screen open on your phone<br>
+          2️⃣ Go to event entrance<br>
+          3️⃣ Show your QR code to the volunteer<br>
+          4️⃣ Volunteer will scan it<br>
+          5️⃣ You're in! 🎉
+        </div>
+
+        <button class="print-btn" onclick="window.print()">🖨️ Print QR Code</button>
+        <button class="back-btn" onclick="location.reload()">← Back</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:5000/api';
+
+    function handleEnter(event) {
+      if (event.key === 'Enter') {
+        fetchQR();
+      }
+    }
+
+    async function fetchQR() {
+      const email = document.getElementById('email').value.trim();
+      const eventId = document.getElementById('eventId').value.trim();
+      const errorEl = document.getElementById('error');
+
+      if (!email || !eventId) {
+        errorEl.textContent = '❌ Please enter both email and event ID';
+        errorEl.classList.add('show');
+        return;
+      }
+
+      errorEl.classList.remove('show');
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/qr/display?email=${encodeURIComponent(email)}&eventId=${eventId}`
+        );
+
+        if (!res.ok) {
+          const err = await res.json();
+          errorEl.textContent = '❌ ' + (err.message || 'Participant not found');
+          errorEl.classList.add('show');
+          return;
+        }
+
+        const data = await res.json();
+
+        // Display data
+        document.getElementById('displayName').textContent = data.name;
+        document.getElementById('displayEmail').textContent = data.email;
+        document.getElementById('displayStudentId').textContent = data.studentId;
+        document.getElementById('qrImage').src = data.qrImage;
+
+        // Status badge
+        const statusEl = document.getElementById('statusBadge');
+        if (data.checkedIn) {
+          statusEl.textContent = '✅ Checked In';
+          statusEl.className = 'status-badge checked-in';
+          document.getElementById('checkinTime').textContent = 
+            `at ${new Date(data.checkinTime).toLocaleString()}`;
+        } else {
+          statusEl.textContent = '❌ Not Checked In';
+          statusEl.className = 'status-badge not-checked-in';
+          document.getElementById('checkinTime').textContent = '';
+        }
+
+        // Hide form, show QR
+        document.getElementById('formSection').classList.add('hide');
+        document.getElementById('qrDisplay').classList.add('show');
+      } catch (err) {
+        console.error(err);
+        errorEl.textContent = '❌ Error: ' + err.message;
+        errorEl.classList.add('show');
+      }
+    }
+  </script>
+</body>
+</html>

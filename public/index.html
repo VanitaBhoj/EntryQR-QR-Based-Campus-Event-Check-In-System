@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event QR Check-In System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 60px;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .subtitle {
+      font-size: 18px;
+      opacity: 0.95;
+      margin-bottom: 20px;
+    }
+
+    .phases {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 50px;
+    }
+
+    .phase-card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .phase-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    .phase-number {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .phase-card h2 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .phase-card p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .phase-card ul {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .phase-card li {
+      color: #666;
+      margin-bottom: 8px;
+      font-size: 13px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .phase-card li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .action-button {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .action-button:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .action-button.secondary {
+      background: #10b981;
+    }
+
+    .action-button.secondary:hover {
+      background: #059669;
+    }
+
+    .action-button.tertiary {
+      background: #f59e0b;
+    }
+
+    .action-button.tertiary:hover {
+      background: #d97706;
+    }
+
+    .flow-diagram {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 50px;
+      overflow-x: auto;
+    }
+
+    .flow-diagram h2 {
+      color: #333;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-width: 800px;
+    }
+
+    .flow-step {
+      background: #f0f4ff;
+      padding: 15px 20px;
+      border-radius: 8px;
+      text-align: center;
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      border: 2px solid #667eea;
+    }
+
+    .flow-arrow {
+      font-size: 20px;
+      color: #667eea;
+    }
+
+    .quick-links {
+      background: white;
+      border-radius: 15px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    .quick-links h2 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .link-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: all 0.3s;
+      color: white;
+    }
+
+    .link-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .link-card-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    .link-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .link-card-desc {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      margin-top: 60px;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎫 Event QR Check-In System</h1>
+      <p class="subtitle">Complete workflow for managing event attendance</p>
+    </header>
+
+    <div class="flow-diagram">
+      <h2>📊 Simple One-Line Flow</h2>
+      <div class="flow">
+        <div class="flow-step">CSV Upload</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Generate Token</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Create QR</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Scan QR</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Hash & Match</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">Check-in ✅</div>
+      </div>
+    </div>
+
+    <div class="phases">
+      <div class="phase-card">
+        <div class="phase-number">1</div>
+        <h2>👩‍💼 Admin Creates Event</h2>
+        <p>Admin logs in and sets up a new event</p>
+        <ul>
+          <li>Login with admin credentials</li>
+          <li>Create event details (name, date, location)</li>
+          <li>Get event ID</li>
+        </ul>
+        <a href="/admin/dashboard.html" class="action-button">Go to Admin Dashboard</a>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-number">2</div>
+        <h2>📋 Admin Uploads CSV</h2>
+        <p>Upload participant list with names and emails</p>
+        <ul>
+          <li>Prepare CSV with participant data</li>
+          <li>Upload via admin dashboard</li>
+          <li>System generates QR codes automatically</li>
+        </ul>
+        <a href="/admin/dashboard.html" class="action-button">Upload Participants</a>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-number">3</div>
+        <h2>🎟️ Participants Get QR</h2>
+        <p>Admin sends QR codes to participants</p>
+        <ul>
+          <li>QR sent via email automatically</li>
+          <li>Participant stores on phone/prints</li>
+          <li>Ready for event day</li>
+        </ul>
+        <p style="font-size: 12px; color: #999; margin-top: 10px; font-style: italic;">✓ Automated email delivery</p>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-number">4</div>
+        <h2>🖥️ Scanner Opens Website</h2>
+        <p>Laptop/tablet at entry point opens scanner</p>
+        <ul>
+          <li>Open http://localhost:5000/scanner on entry device</li>
+          <li>Grant camera permission</li>
+          <li>Scanner ready</li>
+        </ul>
+        <a href="/scanner/" class="action-button secondary">Open Scanner</a>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-number">5</div>
+        <h2>📱 Scan & Check-In</h2>
+        <p>Volunteer scans participant's QR code</p>
+        <ul>
+          <li>Participant shows QR on phone</li>
+          <li>Volunteer scans with camera</li>
+          <li>✅ Checked in!</li>
+        </ul>
+        <p style="font-size: 12px; color: #999; margin-top: 10px; font-style: italic;">✓ Instant feedback with beep</p>
+      </div>
+
+      <div class="phase-card">
+        <div class="phase-number">6</div>
+        <h2>📊 Admin Monitoring</h2>
+        <p>Real-time attendance tracking and reports</p>
+        <ul>
+          <li>View check-in status live</li>
+          <li>Export attendance CSV</li>
+          <li>Track statistics</li>
+        </ul>
+        <a href="/admin/dashboard.html" class="action-button secondary">View Dashboard</a>
+      </div>
+    </div>
+
+    <div class="quick-links">
+      <h2>🚀 Quick Access</h2>
+      <div class="links-grid">
+        <a href="/scanner/" class="link-card">
+          <div class="link-card-icon">📸</div>
+          <div class="link-card-title">Scanner</div>
+          <div class="link-card-desc">Scan QR codes at entry</div>
+        </a>
+
+        <a href="/admin/dashboard.html" class="link-card">
+          <div class="link-card-icon">👨‍💼</div>
+          <div class="link-card-title">Admin Panel</div>
+          <div class="link-card-desc">Create events & upload CSV</div>
+        </a>
+
+        <a href="/participant/display.html" class="link-card">
+          <div class="link-card-icon">🎫</div>
+          <div class="link-card-title">My QR Code</div>
+          <div class="link-card-desc">View your QR code</div>
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <p>Event QR Check-In System v1.0 | All rights reserved</p>
+    </footer>
+  </div>
+</body>
+</html>

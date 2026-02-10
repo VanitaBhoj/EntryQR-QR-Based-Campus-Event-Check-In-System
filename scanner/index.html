@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Check-In Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    #reader {
+      width: 320px;
+      margin: auto;
+    }
+    .msg {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+
+  <h2>📸 Event Check-In</h2>
+  <div id="reader"></div>
+  <div id="result" class="msg"></div>
+
+  <audio id="beep" src="beep.mp3"></audio>
+
+  <script src="scanner.js"></script>
+</body>
+</html>
