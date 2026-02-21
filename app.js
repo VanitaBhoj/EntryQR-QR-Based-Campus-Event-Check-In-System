@@ -1,9 +1,11 @@
 import express from "express";
 import authRoutes from "./routes/auth.routes.js";
-import eventRoutes from "./routes/event.routes.js"; // ✅ ADD THIS
+import eventRoutes from "./routes/event.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import checkinRoutes from "./routes/checkin.routes.js";
 import qrRoutes from "./routes/qr.routes.js";
+import mailRoutes from "./routes/mail.routes.js";
+ 
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
@@ -45,6 +47,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/checkin", checkinRoutes);
 app.use("/api/qr", qrRoutes);
+app.use("/api/mail", mailRoutes);
 
 // Serve React app if built, otherwise fall back to old landing page
 if (fs.existsSync(reactDistDir)) {

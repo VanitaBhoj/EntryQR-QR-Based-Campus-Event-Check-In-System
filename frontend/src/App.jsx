@@ -24,7 +24,7 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<Navigate to="/scanner" replace />} />
+        <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/scanner" element={<ScannerPage />} />
         <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/participant" element={<ParticipantQRPage />} />

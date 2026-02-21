@@ -5,10 +5,19 @@ export default function ScannerPage() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState("idle"); // idle | success | error
   const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  const [cameraOn, setCameraOn] = useState(false);
   const lastScannedRef = useRef(null);
   const qrRef = useRef(null);
 
   useEffect(() => {
+    if (!cameraOn) {
+      if (qrRef.current) {
+        qrRef.current.stop().catch(() => {});
+        qrRef.current = null;
+      }
+      return;
+    }
+
     const html5QrCode = new Html5Qrcode("qr-reader");
 
     const onScanSuccess = (decodedText) => {
@@ -69,6 +78,7 @@ export default function ScannerPage() {
       .catch(() => {
         setStatus("error");
         setMessage("Unable to access camera");
+        setCameraOn(false);
       });
 
     return () => {
@@ -76,7 +86,7 @@ export default function ScannerPage() {
         qrRef.current.stop().catch(() => {});
       }
     };
-  }, [token]);
+  }, [token, cameraOn]);
 
   return (
     <div className="page scanner-page">
@@ -102,9 +112,19 @@ export default function ScannerPage() {
           Tip: if you login on the Admin page in the same browser, this is auto-filled.
         </div>
       </div>
-      <div id="qr-reader" className="qr-reader" />
+      <div style={{ marginBottom: 16 }}>
+        <button 
+          onClick={() => setCameraOn(!cameraOn)}
+          className={cameraOn ? "btn-danger" : "btn-success"}
+        >
+          {cameraOn ? "🔴 Turn Camera OFF" : "🟢 Turn Camera ON"}
+        </button>
+      </div>
+      {cameraOn && (
+        <div id="qr-reader" className="qr-reader" />
+      )}
       <div className={`scan-result scan-result-${status}`}>
-        {message || "Waiting for scan..."}
+        {message || (cameraOn ? "Waiting for scan..." : "Camera is off. Click 'Turn Camera ON' to start scanning.")}
       </div>
     </div>
   );

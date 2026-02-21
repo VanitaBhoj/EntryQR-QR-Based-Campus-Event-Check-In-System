@@ -19,6 +19,7 @@ export default function AdminDashboardPage() {
   const [eventName, setEventName] = useState("");
   const [eventLocation, setEventLocation] = useState("");
   const [eventStartTime, setEventStartTime] = useState("");
+  const [sendingEmails, setSendingEmails] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -27,10 +28,19 @@ export default function AdminDashboardPage() {
   }, [token]);
 
   const login = async () => {
-    if (!email || !password) {
-      setMessage("Please enter email and password");
+    if (!email.trim()) {
+      setMessage("Email is required");
       return;
     }
+    if (!password) {
+      setMessage("Password is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMessage("Please enter a valid email address");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
@@ -42,6 +52,8 @@ export default function AdminDashboardPage() {
         localStorage.setItem("token", data.token);
         setToken(data.token);
         setMessage("");
+        setEmail("");
+        setPassword("");
       } else {
         setMessage(data.message || "Login failed");
       }
@@ -51,10 +63,27 @@ export default function AdminDashboardPage() {
   };
 
   const register = async () => {
-    if (!name || !email || !password) {
-      setMessage("Please enter name, email and password");
+    if (!name.trim()) {
+      setMessage("Name is required");
       return;
     }
+    if (!email.trim()) {
+      setMessage("Email is required");
+      return;
+    }
+    if (!password) {
+      setMessage("Password is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMessage("Please enter a valid email address");
+      return;
+    }
+    if (password.length < 6) {
+      setMessage("Password must be at least 6 characters");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
@@ -63,10 +92,12 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage("Admin registered. Now login with the same credentials.");
+        setMessage("✅ Admin registered successfully. Please login with your credentials.");
         setAuthMode("login");
+        setName("");
+        setEmail("");
+        setPassword("");
       } else {
-        // If user already exists, allow login flow without blocking
         setMessage(data.message || "Registration failed");
       }
     } catch (err) {
@@ -91,10 +122,25 @@ export default function AdminDashboardPage() {
       .replace(/(^-|-$)/g, "");
 
   const createEvent = async () => {
-    if (!eventName || !eventLocation || !eventStartTime) {
-      setMessage("Please fill event name, location, and start time");
+    if (!eventName.trim()) {
+      setMessage("Event name is required");
       return;
     }
+    if (!eventLocation.trim()) {
+      setMessage("Location is required");
+      return;
+    }
+    if (!eventStartTime) {
+      setMessage("Start time is required");
+      return;
+    }
+    
+    const startTime = new Date(eventStartTime);
+    if (startTime < new Date()) {
+      setMessage("Start time must be in the future");
+      return;
+    }
+
     setCreatingEvent(true);
     setMessage("");
     try {
@@ -115,7 +161,7 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Event creation failed");
       const createdId = data.eventId || data._id;
-      setMessage(`Event created. Event ID: ${createdId}`);
+      setMessage(`✅ Event "${eventName}" created successfully!`);
       await loadEvents();
       if (createdId) {
         setSelectedEventId(createdId);
@@ -218,7 +264,7 @@ export default function AdminDashboardPage() {
         throw new Error(data.message || "Upload failed");
       }
       setMessage(
-        `Uploaded ${data.count} participants. QR codes generated successfully.`
+        `Uploaded: ${data.inserted} new participants added. QR codes generated. Emails sent to ${data.inserted} participant(s).`
       );
       // reload participants/stats after upload
       await loadEventData(selectedEventId);
@@ -227,6 +273,48 @@ export default function AdminDashboardPage() {
     } finally {
       setUploading(false);
       e.target.value = "";
+    }
+  };
+
+  const sendEmailsToAllParticipants = async () => {
+    if (!selectedEventId) {
+      setMessage("Please select an event first");
+      return;
+    }
+
+    setSendingEmails(true);
+    setMessage("");
+    
+    try {
+      const res = await fetch(
+        `${API_BASE}/mail/send/${selectedEventId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ notSentOnly: true })
+        }
+      );
+
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send emails");
+      }
+
+      setMessage(
+        `✅ Emails sent successfully! ${data.sent} participant(s) received their QR code.` +
+        (data.failed > 0 ? ` (${data.failed} failed)` : "")
+      );
+      
+      // Refresh event data
+      await loadEventData(selectedEventId);
+    } catch (err) {
+      setMessage(`❌ Error: ${err.message}`);
+    } finally {
+      setSendingEmails(false);
     }
   };
 
@@ -276,7 +364,11 @@ export default function AdminDashboardPage() {
               </button>
             </>
           )}
-          {message && <div className="alert alert-error">{message}</div>}
+          {message && (
+            <div className={`alert ${message.startsWith("Error") || !message.startsWith("✅") && message.includes("failed") ? "alert-error" : message.startsWith("✅") ? "alert-success" : "alert-warning"}`}>
+              {message}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -336,6 +428,12 @@ export default function AdminDashboardPage() {
           <button onClick={exportCSV} disabled={!participants.length}>
             Export CSV
           </button>
+          <button 
+            onClick={sendEmailsToAllParticipants} 
+            disabled={!selectedEventId || sendingEmails || participants.length === 0}
+          >
+            {sendingEmails ? "Sending..." : "📧 Send QR Emails"}
+          </button>
           <label className="upload-label">
             <span>Upload CSV</span>
             <input
@@ -348,7 +446,11 @@ export default function AdminDashboardPage() {
         </div>
 
         {loading && <div className="loading">Loading...</div>}
-        {message && <div className="alert alert-error">{message}</div>}
+        {message && (
+          <div className={`alert ${message.startsWith("❌") || message.startsWith("Error") ? "alert-error" : message.startsWith("✅") ? "alert-success" : "alert-info"}`}>
+            {message}
+          </div>
+        )}
 
         {stats && (
           <div className="stats-grid">

@@ -1,13 +1,14 @@
 {
   "name": "qrcheckin",
   "version": "1.0.0",
-  "description": "",
+  "description": "Event QR Check-In System - Modern web application for managing event registration and check-in using QR codes",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["qr-code", "check-in", "event-management", "participant-tracking"],
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -22,5 +23,9 @@
     "nodemailer": "^8.0.1",
     "papaparse": "^5.5.3",
     "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }
